@@ -65,16 +65,32 @@ func (s ParcelStore) GetByClient(client int) ([]Parcel, error) {
 		res = append(res, p)
 	}
 
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
 	return res, nil
 }
 
 func (s ParcelStore) SetStatus(number int, status string) error {
-	_, err := s.db.Exec(
+	res, err := s.db.Exec(
 		"UPDATE parcel SET status = :status WHERE number = :number",
 		sql.Named("status", status),
 		sql.Named("number", number),
 	)
-	return err
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rowsAffected == 0 {
+		return sql.ErrNoRows
+	}
+
+	return nil
 }
 
 func (s ParcelStore) SetAddress(number int, address string) error {
@@ -91,7 +107,6 @@ func (s ParcelStore) SetAddress(number int, address string) error {
 	if err != nil {
 		return err
 	}
-
 	if rowsAffected == 0 {
 		return sql.ErrNoRows
 	}
@@ -112,7 +127,6 @@ func (s ParcelStore) Delete(number int) error {
 	if err != nil {
 		return err
 	}
-
 	if rowsAffected == 0 {
 		return sql.ErrNoRows
 	}

@@ -36,11 +36,10 @@ func TestAddGetDelete(t *testing.T) {
 	require.NoError(t, err)
 	require.Greater(t, id, 0)
 
+	parcel.Number = id
 	fetched, err := store.Get(id)
 	require.NoError(t, err)
-	assert.Equal(t, parcel.Client, fetched.Client)
-	assert.Equal(t, parcel.Status, fetched.Status)
-	assert.Equal(t, parcel.Address, fetched.Address)
+	assert.Equal(t, parcel, fetched)
 
 	err = store.Delete(id)
 	require.NoError(t, err)
@@ -65,11 +64,14 @@ func TestSetAddress(t *testing.T) {
 	err = store.SetAddress(id, newAddress)
 	require.NoError(t, err)
 
+	parcel.Number = id
+	parcel.Address = newAddress
 	fetched, err := store.Get(id)
 	require.NoError(t, err)
-	assert.Equal(t, newAddress, fetched.Address)
+	assert.Equal(t, parcel, fetched)
 
-	_ = store.Delete(id)
+	err = store.Delete(id)
+	require.NoError(t, err)
 }
 
 func TestSetStatus(t *testing.T) {
@@ -87,11 +89,17 @@ func TestSetStatus(t *testing.T) {
 	err = store.SetStatus(id, ParcelStatusSent)
 	require.NoError(t, err)
 
+	parcel.Number = id
+	parcel.Status = ParcelStatusSent
 	fetched, err := store.Get(id)
 	require.NoError(t, err)
-	assert.Equal(t, ParcelStatusSent, fetched.Status)
+	assert.Equal(t, parcel, fetched)
 
-	_ = store.Delete(id)
+	err = store.SetStatus(id, ParcelStatusRegistered)
+	require.NoError(t, err)
+
+	err = store.Delete(id)
+	require.NoError(t, err)
 }
 
 func TestGetByClient(t *testing.T) {
@@ -126,9 +134,7 @@ func TestGetByClient(t *testing.T) {
 	for _, parcel := range storedParcels {
 		original, exists := parcelMap[parcel.Number]
 		assert.True(t, exists)
-		assert.Equal(t, original.Client, parcel.Client)
-		assert.Equal(t, original.Status, parcel.Status)
-		assert.Equal(t, original.Address, parcel.Address)
+		assert.Equal(t, original, parcel)
 
 		err = store.Delete(parcel.Number)
 		require.NoError(t, err)
